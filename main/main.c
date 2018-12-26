@@ -86,7 +86,6 @@ programSettings_t p4Settings =
 	.angle = SETTINGS_ANGDEF
 };
 
-
 void app_main(void)
 {
     nvs_flash_init();
