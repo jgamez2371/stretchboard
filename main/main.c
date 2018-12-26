@@ -48,6 +48,12 @@ void initAll();
 void startProgram(programSettings_t * settings);
 void stopProgram(programSettings_t *settings);
 
+// Global variables
+float signalFrequency = 20;
+#define STABLE_TIME 10//2*60;
+#define STOCHASTIC_TIME 5//30;
+#define PROGRAM_PERIOD (STABLE_TIME + STOCHASTIC_TIME)
+
 esp_err_t event_handler(void *ctx, system_event_t *event)
 {
     return ESP_OK;
@@ -56,6 +62,7 @@ esp_err_t event_handler(void *ctx, system_event_t *event)
 programSettings_t p1Settings =
 {
 	.time = SETTINGS_TDEF,
+	.elapsedTime = 0,
 	.intensity =  SETTINGS_INTDEF,
 	.infrared = SETTINGS_INFDEF,
 	.frequency = SETTINGS_FREQDEF,
@@ -64,6 +71,7 @@ programSettings_t p1Settings =
 programSettings_t p2Settings =
 {
 	.time = SETTINGS_TDEF,
+	.elapsedTime = 0,
 	.intensity =  SETTINGS_INTDEF,
 	.infrared = SETTINGS_INFDEF,
 	.frequency = SETTINGS_FREQDEF,
@@ -72,11 +80,13 @@ programSettings_t p2Settings =
 programSettings_t p3Settings =
 {
 	.time = SETTINGS_TDEF,
+	.elapsedTime = 0,
 	.intensity =  SETTINGS_INTDEF,
 	.infrared = SETTINGS_INFDEF,
 	.frequency = SETTINGS_FREQDEF,
 	.angle = SETTINGS_ANGDEF
 };
+
 programSettings_t p4Settings =
 {
 	.time = SETTINGS_TDEF,
@@ -164,8 +174,8 @@ void control_task(void *pvParameter)
 	controlState_t state = ST_CONTROL_INIT;
 	controlEvent_t receivedEvent;
 	BaseType_t notificationStatus;
-	uint16_t elapsedTime = 0;
 	programSettings_t *currentProgSettings;
+	int16_t elapsedTime;
 	while(1)
 	{
 		notificationStatus = xTaskNotifyWait(0, ULONG_MAX, &receivedEvent,
@@ -199,16 +209,33 @@ void control_task(void *pvParameter)
 				{
 				case EV_STOP:
 					stopProgram(currentProgSettings);
+					setMenu(MENU_MAIN);
 					state = ST_CONTROL_IDLE;
 					break;
 				case EV_TICK:
-					if(--(currentProgSettings->time) == 0)
+					elapsedTime = ++(currentProgSettings->elapsedTime);
+					// Timeout
+					if(currentProgSettings->time - elapsedTime <= 0)
 					{
 						stopProgram(currentProgSettings);
 						setMenu(MENU_MAIN);
 						state = ST_CONTROL_IDLE;
 					}
-					xTaskNotify(xOutputTask, EV_DISPLAY_UPDATE, eSetValueWithOverwrite);
+					else // Normal tick
+					{
+						int16_t sequenceTime = elapsedTime % PROGRAM_PERIOD;
+						// Stochastic vibration
+						if(sequenceTime > STABLE_TIME)
+						{
+							// Random between 12 and 45 Hz
+							signalFrequency =  esp_random() % 34 + 12;
+						}
+						else if(sequenceTime == 0)
+						{
+							signalFrequency = 20;
+						}
+					}
+
 					break;
 				case EV_UPDATE_LED:
 					setLEDIntesity(currentProgSettings->infrared);
@@ -219,6 +246,7 @@ void control_task(void *pvParameter)
 				default:
 					break;
 				} // receivedEvent
+				xTaskNotify(xOutputTask, EV_DISPLAY_UPDATE, eSetValueWithOverwrite);
 				break;
 			default:
 				break;
@@ -273,7 +301,6 @@ void tick_task(void *pvParameter)
 void bass_task(void *pvParameter)
 {
 	float taskPeriod = 100/1e6;
-	int8_t signalFrequency = 20;
 	float signalAmplitude = 1;
 	float phase = 0;
 	uint32_t bassDutyCycle = 0;
@@ -430,6 +457,7 @@ void stopProgram(programSettings_t *settings)
 {
 	// Reset timer
 	settings->time = SETTINGS_TDEF;
+	settings->elapsedTime = 0;
 	switchLEDOff();
 	// Switch bass off
 	switchBassOff();

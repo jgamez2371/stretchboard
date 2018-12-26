@@ -34,7 +34,6 @@ stretchboardMenu_t getCurrentMenu()
 void setMenu(stretchboardMenu_t menu)
 {
 	currentMenu = menu;
-	getMenuPtr(menu)->menu.selectedRow = 0;
 } // setMenu()
 
 void initMenu(uint8_t sda, uint8_t scl, programSettings_t *p1Settings,
@@ -138,8 +137,9 @@ void menuUpdateVariables(stretchboardMenu_t menu)
 		if((menu == MENU_P1) || (menu == MENU_P2) || (menu == MENU_P3))
 		{
 			// Row 1: Time
-			uint8_t min = menuPtr->settings->time / 60;
-			uint8_t sec = menuPtr->settings->time % 60;
+			uint16_t remainingTime = menuPtr->settings->time - menuPtr->settings->elapsedTime;
+			uint8_t min = remainingTime / 60;
+			uint8_t sec = remainingTime % 60;
 			sprintf(tempString, timeRowTemplate, min, sec);
 			menu_setLine(&menuPtr->menu, 1, tempString);
 			// Row 2: Intensity

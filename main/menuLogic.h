@@ -29,6 +29,7 @@ typedef enum outputEvent_t
 typedef struct programSettings_t
 {
 	int16_t time;
+	int16_t elapsedTime;
 	int8_t intensity;
 	int8_t infrared;
 	int8_t frequency;
