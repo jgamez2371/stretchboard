@@ -66,7 +66,9 @@ programSettings_t p1Settings =
 	.intensity =  SETTINGS_INTDEF,
 	.infrared = SETTINGS_INFDEF,
 	.frequency = SETTINGS_FREQDEF,
-	.angle = SETTINGS_ANGDEF
+	.angle = SETTINGS_ANGDEF,
+	.freqArray = {16, 18, 16, 14, 12, 14, 0},
+	.currentFreqIndex = 0
 };
 programSettings_t p2Settings =
 {
@@ -75,7 +77,9 @@ programSettings_t p2Settings =
 	.intensity =  SETTINGS_INTDEF,
 	.infrared = SETTINGS_INFDEF,
 	.frequency = SETTINGS_FREQDEF,
-	.angle = SETTINGS_ANGDEF
+	.angle = SETTINGS_ANGDEF,
+	.freqArray = {22, 20, 22, 24, 26, 24, 0},
+	.currentFreqIndex = 0
 };
 programSettings_t p3Settings =
 {
@@ -84,7 +88,9 @@ programSettings_t p3Settings =
 	.intensity =  SETTINGS_INTDEF,
 	.infrared = SETTINGS_INFDEF,
 	.frequency = SETTINGS_FREQDEF,
-	.angle = SETTINGS_ANGDEF
+	.angle = SETTINGS_ANGDEF,
+	.freqArray = {40, 45, 40, 35, 0},
+	.currentFreqIndex = 0
 };
 
 programSettings_t p4Settings =
@@ -228,11 +234,12 @@ void control_task(void *pvParameter)
 						if(sequenceTime > STABLE_TIME)
 						{
 							// Random between 12 and 45 Hz
-							signalFrequency =  esp_random() % 34 + 12;
+							//signalFrequency =  esp_random() % 34 + 12;
+							signalFrequency = 10;
 						}
 						else if(sequenceTime == 0)
 						{
-							signalFrequency = 20;
+							signalFrequency = getNextFreq(currentProgSettings);
 						}
 					}
 
@@ -452,12 +459,14 @@ void startProgram(programSettings_t * settings)
 {
 	setLEDIntesity((programIntensityLevel_t)settings->infrared);
 	setBassIntesity((programIntensityLevel_t)settings->intensity);
+	signalFrequency = getNextFreq(settings);
 }
 void stopProgram(programSettings_t *settings)
 {
 	// Reset timer
 	settings->time = SETTINGS_TDEF;
 	settings->elapsedTime = 0;
+	settings->currentFreqIndex = 0;
 	switchLEDOff();
 	// Switch bass off
 	switchBassOff();

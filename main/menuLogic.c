@@ -338,3 +338,21 @@ uint8_t checkKeyAccepted(uint8_t keyMask)
 	} // keyState
 	return accepted;
 }
+
+int8_t getNextFreq(programSettings_t* settings)
+{
+	int8_t nextFreq;
+
+	// Get next frequency
+	nextFreq = settings->freqArray[(settings->currentFreqIndex)];
+	// Check if valid
+	if(nextFreq > 0)
+	{
+		settings->currentFreqIndex++;
+	}
+	else
+	{
+		nextFreq = settings->freqArray[(settings->currentFreqIndex = 0)];
+	}
+	return nextFreq;
+}

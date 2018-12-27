@@ -34,6 +34,8 @@ typedef struct programSettings_t
 	int8_t infrared;
 	int8_t frequency;
 	int8_t angle;
+	int8_t freqArray[10];
+	int8_t currentFreqIndex;
 } programSettings_t;
 
 typedef struct programMenu_t
@@ -108,5 +110,6 @@ controlEvent_t menuP1ReactToKey(uint8_t keyMask);
 stretchboardMenu_t getCurrentMenu();
 void menuUpdateVariables(stretchboardMenu_t menu);
 uint8_t checkKeyAccepted(uint8_t keyMask);
+int8_t getNextFreq(programSettings_t* settings);
 
 #endif /* MENULOGIC_H_ */
