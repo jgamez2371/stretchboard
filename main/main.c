@@ -406,7 +406,7 @@ void initAll()
 		.divider= 80  // 1 MHz timer
 	};
 	timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 100); // Every 100 us
-	timer_isr_register(TIMER_GROUP_0, TIMER_0, timerISR, NULL, 0/*ESP_INTR_FLAG_IRAM*/, NULL);
+	timer_isr_register(TIMER_GROUP_0, TIMER_0, timerISR, NULL, ESP_INTR_FLAG_IRAM, NULL);
 	timer_init(TIMER_GROUP_0, TIMER_0, &timerConfig);
 }
 
@@ -482,7 +482,7 @@ void stopProgram(programSettings_t *settings)
 	switchBassOff();
 }
 
-void /*IRAM_ATTR*/ timerISR(void *para)
+void IRAM_ATTR timerISR(void *para)
 {
 	// Execute bass task
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;

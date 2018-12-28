@@ -9,6 +9,7 @@
 
 int8_t bassIntensity;
 
+// LED PWM configuration variables
 static ledc_timer_config_t ledc_timer =
 {
     .duty_resolution = LEDC_TIMER_RESOLUTION, // resolution of PWM duty
@@ -26,12 +27,29 @@ static ledc_channel_config_t ledc_channel =
 	.timer_sel  = LEDC_HS_TIMER
 };
 
+// Bass PWM configuration variables
+static ledc_timer_config_t bassPWMTimer =
+{
+    .duty_resolution = BASS_PWM_TIMER_RES, // resolution of PWM duty
+    .freq_hz = BASS_PWM_FREQ,              // frequency of PWM signal
+    .speed_mode = LEDC_HIGH_SPEED_MODE,    // timer mode
+    .timer_num = BASS_PWM_TIMER            // timer index
+};
+
+static ledc_channel_config_t bassPWMChannel =
+{
+	.channel    = BASS_PWM_CHANNEL,
+	.duty       = 0,
+	.gpio_num   = BASS_PWM_PIN,
+	.speed_mode = LEDC_HIGH_SPEED_MODE,
+	.timer_sel  = BASS_PWM_TIMER
+};
 
 void ledConfig()
 {
-	    ledc_timer_config(&ledc_timer);
-	    ledc_channel_config(&ledc_channel);
-	    switchLEDOff();
+	ledc_timer_config(&ledc_timer);
+	ledc_channel_config(&ledc_channel);
+	switchLEDOff();
 }
 
 void testLED()
@@ -72,48 +90,8 @@ void setLEDIntesity(programIntensityLevel_t intensity)
 	setLEDDuty(intensity*(LEDC_DUTY_MAX/INTENSITY_HIGH));
 }
 
-
-// TODO: Delete
-static ledc_timer_config_t bassFreqTimer =
-{
-    .duty_resolution = BASS_FREQ_TIMER_RES, // resolution of PWM duty
-    .freq_hz = 20,                        // frequency of PWM signal
-    .speed_mode = LEDC_HIGH_SPEED_MODE,   // timer mode
-    .timer_num = LEDC_TIMER_1             // timer index
-};
-
-// TODO: Delete
-static ledc_channel_config_t bassFreqChannel =
-{
-	.channel    = LEDC_CHANNEL_1,
-	.duty       = (1 << BASS_FREQ_TIMER_RES)/2, // 50%
-	.gpio_num   = BASS_DIRECTION_PIN,
-	.speed_mode = LEDC_HIGH_SPEED_MODE,
-	.timer_sel  = LEDC_TIMER_1
-};
-
-static ledc_timer_config_t bassPWMTimer =
-{
-    .duty_resolution = BASS_PWM_TIMER_RES, // resolution of PWM duty
-    .freq_hz = 20000,                        // frequency of PWM signal
-    .speed_mode = LEDC_HIGH_SPEED_MODE,   // timer mode
-    .timer_num = BASS_PWM_TIMER             // timer index
-};
-
-static ledc_channel_config_t bassPWMChannel =
-{
-	.channel    = BASS_PWM_CHANNEL,
-	.duty       = 0,
-	.gpio_num   = BASS_PWM_PIN,
-	.speed_mode = LEDC_HIGH_SPEED_MODE,
-	.timer_sel  = BASS_PWM_TIMER
-};
-
 void bassConfig()
 {
-	// TODO: Delete
-    //ledc_timer_config(&bassFreqTimer);
-    //ledc_channel_config(&bassFreqChannel);
     ledc_channel_config(&bassPWMChannel);
     ledc_timer_config(&bassPWMTimer);
 	const gpio_config_t bassShakerGPIOConfig =

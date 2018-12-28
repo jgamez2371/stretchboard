@@ -106,7 +106,7 @@ void setMenu(stretchboardMenu_t menu);
 programMenu_t *getMenuPtr(stretchboardMenu_t menu);
 controlEvent_t menuReactToKey(uint8_t keyMask);
 controlEvent_t mainMenuReactToKey(uint8_t keyMask);
-controlEvent_t menuP1ReactToKey(uint8_t keyMask);
+controlEvent_t programMenuReactToKey(stretchboardMenu_t menu, uint8_t keyMask);
 stretchboardMenu_t getCurrentMenu();
 void menuUpdateVariables(stretchboardMenu_t menu);
 uint8_t checkKeyAccepted(uint8_t keyMask);

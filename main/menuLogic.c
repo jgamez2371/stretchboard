@@ -170,7 +170,9 @@ controlEvent_t menuReactToKey(uint8_t keyMask)
 					event = mainMenuReactToKey(keyMask);
 					break;
 				case MENU_P1:
-					event = menuP1ReactToKey(keyMask);
+				case MENU_P2:
+				case MENU_P3:
+					event = programMenuReactToKey(currentMenu, keyMask);
 					break;
 				default:
 					setMenu(MENU_MAIN);
@@ -209,9 +211,9 @@ controlEvent_t mainMenuReactToKey(uint8_t keyMask)
 	return event;
 } // mainMenuReactToKey
 
-controlEvent_t menuP1ReactToKey(uint8_t keyMask)
+controlEvent_t programMenuReactToKey(stretchboardMenu_t menu, uint8_t keyMask)
 {
-	programMenu_t *menuPtr = getMenuPtr(MENU_P1);
+	programMenu_t *menuPtr = getMenuPtr(menu);
 	controlEvent_t event = EV_NONE;
 	int8_t currentRow = menuPtr->menu.selectedRow;
 	switch(keyMask)
