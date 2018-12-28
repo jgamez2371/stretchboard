@@ -112,20 +112,25 @@ void app_main(void)
     i2cSemaphore = xSemaphoreCreateMutex();
     xSemaphoreGive(i2cSemaphore);
     // Tasks creation
-    xTaskCreate(&input_task, "input_task", configMINIMAL_STACK_SIZE*5, NULL, 2, &xInputTask);
-    xTaskCreate(&control_task, "control_task", configMINIMAL_STACK_SIZE*5, NULL, 2, &xControlTask);
-    xTaskCreatePinnedToCore(&output_task, "output_task", configMINIMAL_STACK_SIZE*5, NULL, 2, &xOutputTask, 0);
+    // Core 0
+    xTaskCreatePinnedToCore(&output_task, "output_task",
+    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xOutputTask, 0);
+    // Core 1
+    xTaskCreatePinnedToCore(&bass_task, "bass_task",
+    		configMINIMAL_STACK_SIZE*5, NULL, 4, &xBassTask, 1);
+    // Rest
+    xTaskCreate(&input_task, "input_task",
+    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xInputTask);
+    xTaskCreate(&control_task, "control_task",
+    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xControlTask);
+    xTaskCreate(&tick_task, "tick_task",
+    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xTickTask);
     xTaskNotify(xControlTask, EV_NONE, eSetValueWithOverwrite);
-    xTaskCreate(&motor_task, "motor_task", configMINIMAL_STACK_SIZE*5, NULL, 2, &xMotorTask);
-    xTaskCreate(&adc_task, "adc_task", configMINIMAL_STACK_SIZE*5, NULL, 2, &xADCTask);
-    xTaskCreate(&tick_task, "tick_task", configMINIMAL_STACK_SIZE*5, NULL, 2, &xTickTask);
-    xTaskCreatePinnedToCore(&bass_task, "bass_task", configMINIMAL_STACK_SIZE*5, NULL, 4, &xBassTask, 1);
-
-    //xTaskCreate(&blink_task, "blink_task", configMINIMAL_STACK_SIZE*5, NULL, 1, &xBlinkTask);
+    xTaskCreate(&motor_task, "motor_task",
+    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xMotorTask);
+    xTaskCreate(&adc_task, "adc_task",
+    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xADCTask);
 } // app_main
-#define PCA9536_7_BIT_ADDRESS 0x41
-#define PCA9536_I2C_WRITE_ADDRESS PCA9536_7_BIT_ADDRESS<<1
-#define PCA9536_I2C_READ_ADDRESS (PCA9536_7_BIT_ADDRESS<<1)+1
 
 void input_task(void *pvParameter)
 {
@@ -150,8 +155,10 @@ void input_task(void *pvParameter)
 				if(checkKeyAccepted(keyMask))
 				{
 					eventToSend = menuReactToKey(keyMask);
-					xTaskNotify(xControlTask, eventToSend, eSetValueWithOverwrite);
-					xTaskNotify(xOutputTask, EV_DISPLAY_UPDATE, eSetValueWithOverwrite);
+					xTaskNotify(xControlTask, eventToSend,
+							eSetValueWithOverwrite);
+					xTaskNotify(xOutputTask, EV_DISPLAY_UPDATE,
+							eSetValueWithOverwrite);
 				} // checkKeyAccepted(keyMask)
 				xSemaphoreGive(i2cSemaphore);
 			}//(xSemaphoreTake(i2cSemaphore, 250) == pdTRUE)
@@ -202,7 +209,8 @@ void control_task(void *pvParameter)
 				switch(receivedEvent)
 				{
 					case EV_START:
-						currentProgSettings = getMenuPtr(getCurrentMenu())->settings;
+						currentProgSettings =
+								getMenuPtr(getCurrentMenu())->settings;
 						startProgram(currentProgSettings);
 						state = ST_CONTROL_PROGRAM;
 						break;
@@ -253,7 +261,8 @@ void control_task(void *pvParameter)
 				default:
 					break;
 				} // receivedEvent
-				xTaskNotify(xOutputTask, EV_DISPLAY_UPDATE, eSetValueWithOverwrite);
+				xTaskNotify(xOutputTask, EV_DISPLAY_UPDATE,
+						eSetValueWithOverwrite);
 				break;
 			default:
 				break;
@@ -382,7 +391,8 @@ uint8_t readPCA9536()
 
 void initAll()
 {
-	initMenu(PIN_SDA, PIN_SCL, &p1Settings, &p2Settings, &p3Settings, &p4Settings);
+	initMenu(PIN_SDA, PIN_SCL, &p1Settings, &p2Settings, &p3Settings,
+			&p4Settings);
 	ledConfig();
 	bassConfig();
 	// Timer init
