@@ -165,40 +165,17 @@ controlEvent_t menuReactToKey(uint8_t keyMask)
 		case MENU_P3:
 			event = programMenuReactToKey(currentMenu, keyMask);
 			break;
+		case MENU_P4_1:
+			event = p4_1ReactToKey(keyMask);
+			break;
+		case MENU_P4_2:
+			event = p4_2ReactToKey(keyMask);
+			break;
 		default:
 			setMenu(MENU_MAIN);
 	} // currentMenu
 	return event;
 } // menuReactToKey
-//controlEvent_t menuReactToKey(uint8_t keyMask)
-//{
-//	controlEvent_t event = EV_NONE;
-//	switch(keyMask)
-//	{
-//		case KEY_DOWN:
-//			menuScroll(SCROLL_DOWN);
-//			break;
-//		case KEY_UP:
-//			menuScroll(SCROLL_UP);
-//			break;
-//		default:
-//			switch(currentMenu)
-//			{
-//				case MENU_MAIN:
-//					event = mainMenuReactToKey(keyMask);
-//					break;
-//				case MENU_P1:
-//				case MENU_P2:
-//				case MENU_P3:
-//					event = programMenuReactToKey(currentMenu, keyMask);
-//					break;
-//				default:
-//					setMenu(MENU_MAIN);
-//			} // currentMenu
-//			break;
-//	} // keyMask
-//	return event;
-//} // menuReactToKey
 
 controlEvent_t mainMenuReactToKey(uint8_t keyMask)
 {
@@ -303,7 +280,87 @@ controlEvent_t programMenuReactToKey(stretchboardMenu_t menu, uint8_t keyMask)
 			break;
 	} // keyMask
 	return event;
-} // menuP1ReactToKey()
+} // programMenuReactToKey()
+
+controlEvent_t p4_1ReactToKey(uint8_t keyMask)
+{
+	controlEvent_t event = EV_NONE;
+	programMenu_t *menuPtr = getMenuPtr(MENU_P4_1);
+	int8_t currentRow = menuPtr->menu.selectedRow;
+	switch(keyMask)
+	{
+		case KEY_DOWN:
+			switch(currentRow)
+			{
+				case 3:
+					// Set menu 4.2 at row 0
+					(getMenuPtr(MENU_P4_2)->menu).selectedRow = 0;
+					setMenu(MENU_P4_2);
+					break;
+				default:
+					menuScroll(SCROLL_DOWN);
+					break;
+			}
+			break;
+		case KEY_UP:
+			switch(currentRow)
+			{
+				case 0:
+					// Set menu 4.2 at row 3
+					(getMenuPtr(MENU_P4_2)->menu).selectedRow = 3;
+					setMenu(MENU_P4_2);
+					break;
+				default:
+					menuScroll(SCROLL_UP);
+					break;
+			}
+			break;
+		default:
+			setMenu(MENU_MAIN);
+			break;
+	}
+	return event;
+}
+
+controlEvent_t p4_2ReactToKey(uint8_t keyMask)
+{
+	controlEvent_t event = EV_NONE;
+	programMenu_t *menuPtr = getMenuPtr(MENU_P4_2);
+	int8_t currentRow = menuPtr->menu.selectedRow;
+	switch(keyMask)
+	{
+		case KEY_DOWN:
+			switch(currentRow)
+			{
+				case 3:
+					// Set menu 4.1 at row 0
+					(getMenuPtr(MENU_P4_1)->menu).selectedRow = 0;
+					setMenu(MENU_P4_1);
+					break;
+				default:
+					menuScroll(SCROLL_DOWN);
+					break;
+			}
+			break;
+		case KEY_UP:
+			switch(currentRow)
+			{
+				case 0:
+					// Set menu 4.1 at row 3
+					(getMenuPtr(MENU_P4_1)->menu).selectedRow = 3;
+					setMenu(MENU_P4_1);
+					break;
+				default:
+					menuScroll(SCROLL_UP);
+					break;
+			}
+			break;
+		default:
+			setMenu(MENU_MAIN);
+			break;
+	}
+	return event;
+}
 
 uint8_t checkKeyAccepted(uint8_t keyMask)
 {
