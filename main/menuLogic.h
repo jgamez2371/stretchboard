@@ -18,7 +18,10 @@ typedef enum controlEvent_t
 	EV_STOP					= 0x01 << 1,
 	EV_TICK					= 0x01 << 2,
 	EV_UPDATE_LED			= 0x01 << 3,
-	EVENT_UPDATE_INTENSITY	= 0x01 << 4
+	EV_UPDATE_INTENSITY		= 0x01 << 4,
+	EV_UPDATE_FREQUENCY		= 0x01 << 5,
+	EV_UPDATE_ANGLE			= 0x01 << 6,
+	EV_UPDATE_TIME			= 0x01 << 7
 } controlEvent_t;
 
 typedef enum outputEvent_t
@@ -51,8 +54,8 @@ typedef struct programMenu_t
 #define SETTINGS_INTDEF		INTENSITY_LOW
 #define SETTINGS_INFDEF		INTENSITY_LOW
 
-#define SETTINGS_FREQMAX	100
-#define SETTINGS_FREQMIN	10
+#define SETTINGS_FREQMAX	45
+#define SETTINGS_FREQMIN	12
 #define SETTINGS_FREQDEF	20
 #define SETTINGS_ANGMAX		45
 #define SETTINGS_ANGMIN		0

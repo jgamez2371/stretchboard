@@ -253,7 +253,7 @@ void control_task(void *pvParameter)
 				case EV_UPDATE_LED:
 					setLEDIntesity(currentProgSettings->infrared);
 					break;
-				case EVENT_UPDATE_INTENSITY:
+				case EV_UPDATE_INTENSITY:
 					setBassIntesity(currentProgSettings->intensity);
 					break;
 				default:

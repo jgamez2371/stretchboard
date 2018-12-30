@@ -134,21 +134,57 @@ void menuUpdateVariables(stretchboardMenu_t menu)
 	char tempString[50];
 	if(menuPtr->settings != NULL)
 	{
-		if((menu == MENU_P1) || (menu == MENU_P2) || (menu == MENU_P3))
+		uint16_t remainingTime;
+		uint8_t min;
+		uint8_t sec;
+		// Calculate time
+		remainingTime = menuPtr->settings->time -
+				menuPtr->settings->elapsedTime;
+		min = remainingTime / 60;
+		sec = remainingTime % 60;
+		switch(menu)
 		{
-			// Row 1: Time
-			uint16_t remainingTime = menuPtr->settings->time - menuPtr->settings->elapsedTime;
-			uint8_t min = remainingTime / 60;
-			uint8_t sec = remainingTime % 60;
-			sprintf(tempString, timeRowTemplate, min, sec);
-			menu_setLine(&menuPtr->menu, 1, tempString);
-			// Row 2: Intensity
-			sprintf(tempString, intensityRowTempalte, menuPtr->settings->intensity);
-			menu_setLine(&menuPtr->menu, 2, tempString);
-			// Row 3: Infrared
-			sprintf(tempString, infraredRowTemplate, menuPtr->settings->infrared);
-			menu_setLine(&menuPtr->menu, 3, tempString);
-		} // ((menu == MENU_P1) || (menu == MENU_P2) || (menu == MENU_P3))
+			case MENU_P1:
+			case MENU_P2:
+			case MENU_P3:
+				// Row 1: Time
+				sprintf(tempString, timeRowTemplate, min, sec);
+				menu_setLine(&menuPtr->menu, 1, tempString);
+				// Row 2: Intensity
+				sprintf(tempString, intensityRowTempalte,
+						menuPtr->settings->intensity);
+				menu_setLine(&menuPtr->menu, 2, tempString);
+				// Row 3: Infrared
+				sprintf(tempString, infraredRowTemplate,
+						menuPtr->settings->infrared);
+				menu_setLine(&menuPtr->menu, 3, tempString);
+				break;
+			case MENU_P4_1:
+				sprintf(tempString, timeRowTemplate, min, sec);
+				menu_setLine(&menuPtr->menu, 2, tempString);
+				break;
+			case MENU_P4_2:
+				// Row 0: Intensity
+				sprintf(tempString, intensityRowTempalte,
+						menuPtr->settings->intensity);
+				menu_setLine(&menuPtr->menu, 0, tempString);
+				// Row 1: Infrared
+				sprintf(tempString, infraredRowTemplate,
+						menuPtr->settings->infrared);
+				menu_setLine(&menuPtr->menu, 1, tempString);
+				// Row 2: Frequency
+				sprintf(tempString, frequencyRowTemplate,
+						menuPtr->settings->frequency);
+				menu_setLine(&menuPtr->menu, 2, tempString);
+				// Row 3: Angle
+				sprintf(tempString, angleRowTemplate,
+						menuPtr->settings->angle);
+				menu_setLine(&menuPtr->menu, 3, tempString);
+				break;
+			default:
+				break;
+		} // menu
+
 	} // (menuPtr->settings != NULL)
 } // menuUpdateVariables
 
@@ -237,7 +273,7 @@ controlEvent_t programMenuReactToKey(stretchboardMenu_t menu, uint8_t keyMask)
 					{
 						menuPtr->settings->intensity = INTENSITY_LOW;
 					}
-					event = EVENT_UPDATE_INTENSITY;
+					event = EV_UPDATE_INTENSITY;
 					break;
 				case 3: // Infrared
 					if(--menuPtr->settings->infrared < INTENSITY_LOW)
@@ -262,7 +298,7 @@ controlEvent_t programMenuReactToKey(stretchboardMenu_t menu, uint8_t keyMask)
 					{
 						menuPtr->settings->intensity = INTENSITY_HIGH;
 					}
-					event = EVENT_UPDATE_INTENSITY;
+					event = EV_UPDATE_INTENSITY;
 					break;
 				case 3: // Infrared
 					if(++menuPtr->settings->infrared > INTENSITY_HIGH)
@@ -355,6 +391,73 @@ controlEvent_t p4_2ReactToKey(uint8_t keyMask)
 					break;
 			}
 			break;
+		case KEY_LEFT:
+			switch(currentRow)
+			{
+				case 0: // Intensity
+					if(--menuPtr->settings->intensity < INTENSITY_LOW)
+					{
+						menuPtr->settings->intensity = INTENSITY_LOW;
+					}
+					event = EV_UPDATE_INTENSITY;
+					break;
+				case 1: // Infrared
+					if(--menuPtr->settings->infrared < INTENSITY_LOW)
+					{
+						menuPtr->settings->infrared = INTENSITY_LOW;
+					}
+					event = EV_UPDATE_LED;
+					break;
+				case 2: // Frequency
+					if(--(menuPtr->settings->frequency) < SETTINGS_FREQMIN)
+					{
+						menuPtr->settings->frequency = SETTINGS_FREQMIN;
+					}
+					event = EV_UPDATE_FREQUENCY;
+					break;
+				case 3: // Angle
+					if(--(menuPtr->settings->angle) < SETTINGS_ANGMIN)
+					{
+						menuPtr->settings->angle = SETTINGS_ANGMIN;
+					}
+					event = EV_UPDATE_ANGLE;
+					break;
+			} // currentRow
+			break;
+			// KEY_LEFT
+			case KEY_RIGHT:
+				switch(currentRow)
+				{
+				case 0: // Intensity
+					if(++menuPtr->settings->intensity > INTENSITY_HIGH)
+					{
+						menuPtr->settings->intensity = INTENSITY_HIGH;
+					}
+					event = EV_UPDATE_INTENSITY;
+					break;
+				case 1: // Infrared
+					if(++menuPtr->settings->infrared > INTENSITY_HIGH)
+					{
+						menuPtr->settings->infrared = INTENSITY_HIGH;
+					}
+					event = EV_UPDATE_LED;
+					break;
+				case 2: // Frequency
+					if(++(menuPtr->settings->frequency) > SETTINGS_FREQMAX)
+					{
+						menuPtr->settings->frequency = SETTINGS_FREQMAX;
+					}
+					event = EV_UPDATE_FREQUENCY;
+					break;
+				case 3: // Angle
+					if(++(menuPtr->settings->angle) > SETTINGS_ANGMAX)
+					{
+						menuPtr->settings->angle = SETTINGS_ANGMAX;
+					}
+					event = EV_UPDATE_ANGLE;
+					break;
+				} // currentRow
+				break;
 		default:
 			setMenu(MENU_MAIN);
 			break;
