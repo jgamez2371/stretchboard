@@ -155,6 +155,55 @@ void menuUpdateVariables(stretchboardMenu_t menu)
 controlEvent_t menuReactToKey(uint8_t keyMask)
 {
 	controlEvent_t event = EV_NONE;
+	switch(currentMenu)
+	{
+		case MENU_MAIN:
+			event = mainMenuReactToKey(keyMask);
+			break;
+		case MENU_P1:
+		case MENU_P2:
+		case MENU_P3:
+			event = programMenuReactToKey(currentMenu, keyMask);
+			break;
+		default:
+			setMenu(MENU_MAIN);
+	} // currentMenu
+	return event;
+} // menuReactToKey
+//controlEvent_t menuReactToKey(uint8_t keyMask)
+//{
+//	controlEvent_t event = EV_NONE;
+//	switch(keyMask)
+//	{
+//		case KEY_DOWN:
+//			menuScroll(SCROLL_DOWN);
+//			break;
+//		case KEY_UP:
+//			menuScroll(SCROLL_UP);
+//			break;
+//		default:
+//			switch(currentMenu)
+//			{
+//				case MENU_MAIN:
+//					event = mainMenuReactToKey(keyMask);
+//					break;
+//				case MENU_P1:
+//				case MENU_P2:
+//				case MENU_P3:
+//					event = programMenuReactToKey(currentMenu, keyMask);
+//					break;
+//				default:
+//					setMenu(MENU_MAIN);
+//			} // currentMenu
+//			break;
+//	} // keyMask
+//	return event;
+//} // menuReactToKey
+
+controlEvent_t mainMenuReactToKey(uint8_t keyMask)
+{
+	programMenu_t *menuPtr = getMenuPtr(MENU_MAIN);
+	controlEvent_t event = EV_NONE;
 	switch(keyMask)
 	{
 		case KEY_DOWN:
@@ -163,31 +212,6 @@ controlEvent_t menuReactToKey(uint8_t keyMask)
 		case KEY_UP:
 			menuScroll(SCROLL_UP);
 			break;
-		default:
-			switch(currentMenu)
-			{
-				case MENU_MAIN:
-					event = mainMenuReactToKey(keyMask);
-					break;
-				case MENU_P1:
-				case MENU_P2:
-				case MENU_P3:
-					event = programMenuReactToKey(currentMenu, keyMask);
-					break;
-				default:
-					setMenu(MENU_MAIN);
-			} // currentMenu
-			break;
-	} // keyMask
-	return event;
-} // menuTransition
-
-controlEvent_t mainMenuReactToKey(uint8_t keyMask)
-{
-	programMenu_t *menuPtr = getMenuPtr(MENU_MAIN);
-	controlEvent_t event = EV_NONE;
-	switch(keyMask)
-	{
 		case KEY_RIGHT:
 			switch(menuPtr->menu.selectedRow)
 			{
@@ -218,6 +242,12 @@ controlEvent_t programMenuReactToKey(stretchboardMenu_t menu, uint8_t keyMask)
 	int8_t currentRow = menuPtr->menu.selectedRow;
 	switch(keyMask)
 	{
+		case KEY_DOWN:
+			menuScroll(SCROLL_DOWN);
+			break;
+		case KEY_UP:
+			menuScroll(SCROLL_UP);
+			break;
 		case KEY_LEFT:
 			switch(currentRow)
 			{

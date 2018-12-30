@@ -10,6 +10,7 @@
 
 #include "driver/ledc.h"
 #include "driver/timer.h"
+#include "driver/i2c.h"
 
 #define LEDC_HS_TIMER         	LEDC_TIMER_0
 #define LEDC_HS_MODE          	LEDC_HIGH_SPEED_MODE
@@ -53,5 +54,6 @@ void bassConfig();
 void setBassPWMDuty(uint32_t duty);
 void setBassIntesity(programIntensityLevel_t intensity);
 void switchBassOff();
+uint8_t readPCA9536();
 
 #endif /* STRETCHBOARDPERIPHERALS_H_ */

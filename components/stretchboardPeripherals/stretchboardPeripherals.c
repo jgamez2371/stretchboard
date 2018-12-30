@@ -129,3 +129,28 @@ void switchBassOff()
 	gpio_set_level(BASS_DISABLE_PIN, 1);
 	ledc_stop(LEDC_HIGH_SPEED_MODE, BASS_PWM_CHANNEL, 0);
 }
+
+uint8_t readPCA9536()
+{
+	uint8_t slaveData;
+	i2c_cmd_handle_t i2cHandle = i2c_cmd_link_create();
+	// 1. Start condition
+	i2c_master_start(i2cHandle);
+	// 2. Slave address write
+	i2c_master_write_byte(i2cHandle, PCA9536_I2C_WRITE_ADDRESS, 0x1);
+	// 3. CMD
+	i2c_master_write_byte(i2cHandle, 0x00, 0x1);
+	// 4. Restart
+	i2c_master_start(i2cHandle);
+	// 5. Slave address read
+	i2c_master_write_byte(i2cHandle, PCA9536_I2C_READ_ADDRESS, 0x1);
+	// 6. Read 1 byte NAK
+	i2c_master_read_byte(i2cHandle, &slaveData,I2C_MASTER_LAST_NACK);
+	// 7. Stop condition
+	i2c_master_stop(i2cHandle);
+	// 8. Send all the stuff
+	i2c_master_cmd_begin(I2C_NUM_1, i2cHandle, (TickType_t)25);
+	// 9. Delete the thing
+	i2c_cmd_link_delete(i2cHandle);
+	return slaveData;
+} //readPCA9536
