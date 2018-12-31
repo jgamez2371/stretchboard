@@ -247,7 +247,6 @@ void control_task(void *pvParameter)
 						}
 						else if(sequenceTime == 0)
 						{
-							//signalFrequency = currentProgSettings->frequency;
 							signalFrequency = getNextFreq(currentProgSettings);
 						}
 					}

@@ -253,6 +253,8 @@ controlEvent_t programMenuReactToKey(stretchboardMenu_t menu, uint8_t keyMask)
 	programMenu_t *menuPtr = getMenuPtr(menu);
 	controlEvent_t event = EV_NONE;
 	int8_t currentRow = menuPtr->menu.selectedRow;
+	int16_t programTime = menuPtr->settings->time;
+	int16_t elapsedTime = menuPtr->settings->elapsedTime;
 	switch(keyMask)
 	{
 		case KEY_DOWN:
@@ -267,6 +269,17 @@ controlEvent_t programMenuReactToKey(stretchboardMenu_t menu, uint8_t keyMask)
 				case 0: // Title
 					event = EV_STOP;
 					setMenu(MENU_MAIN);
+					break;
+				case 1: // Time
+					programTime -= 60;
+					if(programTime > elapsedTime)
+					{
+						menuPtr->settings->time = programTime;
+					}
+					else
+					{
+						event = EV_STOP;
+					}
 					break;
 				case 2: // Intensity
 					if(--menuPtr->settings->intensity < INTENSITY_LOW)
@@ -292,6 +305,17 @@ controlEvent_t programMenuReactToKey(stretchboardMenu_t menu, uint8_t keyMask)
 			{
 				case 0: // Title
 					event = EV_START;
+					break;
+				case 1: // Time
+					programTime += 60;
+					if((programTime) > SETTINGS_TMAX)
+					{
+						menuPtr->settings->time = SETTINGS_TMAX;
+					}
+					else
+					{
+						menuPtr->settings->time = programTime;
+					}
 					break;
 				case 2: // Intensity
 					if(++menuPtr->settings->intensity > INTENSITY_HIGH)
@@ -323,6 +347,8 @@ controlEvent_t p4_1ReactToKey(uint8_t keyMask)
 	controlEvent_t event = EV_NONE;
 	programMenu_t *menuPtr = getMenuPtr(MENU_P4_1);
 	int8_t currentRow = menuPtr->menu.selectedRow;
+	int16_t programTime = menuPtr->settings->time;
+	int16_t elapsedTime = menuPtr->settings->elapsedTime;
 	switch(keyMask)
 	{
 		case KEY_DOWN:
@@ -358,6 +384,17 @@ controlEvent_t p4_1ReactToKey(uint8_t keyMask)
 					event = EV_STOP;
 					setMenu(MENU_MAIN);
 					break;
+				case 2: // Time
+					programTime -= 60;
+					if(programTime > elapsedTime)
+					{
+						menuPtr->settings->time = programTime;
+					}
+					else
+					{
+						event = EV_STOP;
+					}
+					break;
 				default:
 					break;
 			} // currentRow
@@ -367,6 +404,17 @@ controlEvent_t p4_1ReactToKey(uint8_t keyMask)
 			{
 				case 0: // Title
 					event = EV_START;
+					break;
+				case 2: // Time
+					programTime += 60;
+					if((programTime) > SETTINGS_TMAX)
+					{
+						menuPtr->settings->time = SETTINGS_TMAX;
+					}
+					else
+					{
+						menuPtr->settings->time = programTime;
+					}
 					break;
 				default:
 					break;
