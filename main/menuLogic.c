@@ -351,6 +351,27 @@ controlEvent_t p4_1ReactToKey(uint8_t keyMask)
 					break;
 			}
 			break;
+		case KEY_LEFT:
+			switch(currentRow)
+			{
+				case 0: //Title
+					event = EV_STOP;
+					setMenu(MENU_MAIN);
+					break;
+				default:
+					break;
+			} // currentRow
+			break;
+		case KEY_RIGHT:
+			switch(currentRow)
+			{
+				case 0: // Title
+					event = EV_START;
+					break;
+				default:
+					break;
+			} //currentRow
+			break;
 		default:
 			setMenu(MENU_MAIN);
 			break;
@@ -545,6 +566,10 @@ int8_t getNextFreq(programSettings_t* settings)
 	else
 	{
 		nextFreq = settings->freqArray[(settings->currentFreqIndex = 0)];
+	}
+	if(nextFreq < 1)
+	{
+		return settings->frequency;
 	}
 	return nextFreq;
 }

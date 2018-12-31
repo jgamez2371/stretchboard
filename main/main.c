@@ -48,7 +48,7 @@ void stopProgram(programSettings_t *settings);
 
 // Global variables
 float signalFrequency = 20;
-#define STABLE_TIME 10//2*60;
+#define STABLE_TIME 1000//2*60;
 #define STOCHASTIC_TIME 5//30;
 #define PROGRAM_PERIOD (STABLE_TIME + STOCHASTIC_TIME)
 
@@ -97,7 +97,9 @@ programSettings_t p4Settings =
 	.intensity =  SETTINGS_INTDEF,
 	.infrared = SETTINGS_INFDEF,
 	.frequency = SETTINGS_FREQDEF,
-	.angle = SETTINGS_ANGDEF
+	.angle = SETTINGS_ANGDEF,
+	.freqArray = {0, 0},
+	.currentFreqIndex = 0
 };
 
 void app_main(void)
@@ -245,6 +247,7 @@ void control_task(void *pvParameter)
 						}
 						else if(sequenceTime == 0)
 						{
+							//signalFrequency = currentProgSettings->frequency;
 							signalFrequency = getNextFreq(currentProgSettings);
 						}
 					}
@@ -255,6 +258,9 @@ void control_task(void *pvParameter)
 					break;
 				case EV_UPDATE_INTENSITY:
 					setBassIntesity(currentProgSettings->intensity);
+					break;
+				case EV_UPDATE_FREQUENCY:
+					signalFrequency =  getNextFreq(currentProgSettings);
 					break;
 				default:
 					break;
@@ -273,6 +279,7 @@ void output_task(void *pvParameter)
 {
 	uint32_t notificationValue;
 	BaseType_t notificationSuccess = pdFALSE;
+	printf("Output task running in core %d\r\n", xPortGetCoreID());
 	while(1)
 	{
 		notificationSuccess = xTaskNotifyWait( 0, ULONG_MAX, &notificationValue,
@@ -330,7 +337,7 @@ void bass_task(void *pvParameter)
     };
     gpio_config(&testGPIO);
     gpio_set_level(GPIO_NUM_21, 0); // Disable
-
+    printf("Bass task running on core %d\r\n", xPortGetCoreID());
     while(1)
 	{
 		// Suspend this task
@@ -339,13 +346,14 @@ void bass_task(void *pvParameter)
 			gpio_set_level(GPIO_NUM_21, 1); // Enable
 
 			// Calculate phase resolution
+			if(signalFrequency < 1) signalFrequency = 1;
 			float signalPeriod = 1/(float)signalFrequency;
 			float phaseResolution = 2*M_PI/(signalPeriod/((float)taskPeriod));
 
 			// Calculate PWM value
 			signalAmplitude = (float)bassIntensity/INTENSITY_HIGH;
-			signalValue = signalAmplitude*sin(phase);
-			bassDutyCycle = BASS_PWM_DUTY_MAX*fabs(signalValue);
+			signalValue = signalAmplitude*sin(phase)/4;
+			bassDutyCycle = (uint32_t)(BASS_PWM_DUTY_MAX*fabs(signalValue));
 			setBassPWMDuty(bassDutyCycle);
 
 			// Set direction according to the sign

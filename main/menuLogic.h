@@ -20,8 +20,7 @@ typedef enum controlEvent_t
 	EV_UPDATE_LED			= 0x01 << 3,
 	EV_UPDATE_INTENSITY		= 0x01 << 4,
 	EV_UPDATE_FREQUENCY		= 0x01 << 5,
-	EV_UPDATE_ANGLE			= 0x01 << 6,
-	EV_UPDATE_TIME			= 0x01 << 7
+	EV_UPDATE_ANGLE			= 0x01 << 6
 } controlEvent_t;
 
 typedef enum outputEvent_t
