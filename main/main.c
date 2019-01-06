@@ -112,24 +112,24 @@ void app_main(void)
     i2cSemaphore = xSemaphoreCreateMutex();
     xSemaphoreGive(i2cSemaphore);
     // Tasks creation
-    // Core 0
-    xTaskCreatePinnedToCore(&output_task, "output_task",
-    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xOutputTask, 0);
     // Core 1
+    xTaskCreatePinnedToCore(&output_task, "output_task",
+    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xOutputTask, 1);
+    xTaskCreatePinnedToCore(&tick_task, "tick_task",
+        		configMINIMAL_STACK_SIZE*5, NULL, 3, &xTickTask, 1);
+    xTaskCreatePinnedToCore(&control_task, "control_task",
+        		configMINIMAL_STACK_SIZE*5, NULL, 3, &xControlTask, 1);
+    // Core 0
     xTaskCreatePinnedToCore(&bass_task, "bass_task",
-    		configMINIMAL_STACK_SIZE*5, NULL, 4, &xBassTask, 1);
+    		configMINIMAL_STACK_SIZE*5, NULL, 4, &xBassTask, 0);
     // Rest
     xTaskCreate(&input_task, "input_task",
     		configMINIMAL_STACK_SIZE*5, NULL, 2, &xInputTask);
-    xTaskCreate(&control_task, "control_task",
-    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xControlTask);
-    xTaskCreate(&tick_task, "tick_task",
-    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xTickTask);
     xTaskNotify(xControlTask, EV_NONE, eSetValueWithOverwrite);
-    xTaskCreate(&motor_task, "motor_task",
-    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xMotorTask);
-    xTaskCreate(&adc_task, "adc_task",
-    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xADCTask);
+//    xTaskCreate(&motor_task, "motor_task",
+//    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xMotorTask);
+//    xTaskCreate(&adc_task, "adc_task",
+//    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xADCTask);
 } // app_main
 
 void input_task(void *pvParameter)
@@ -278,7 +278,6 @@ void output_task(void *pvParameter)
 {
 	uint32_t notificationValue;
 	BaseType_t notificationSuccess = pdFALSE;
-	printf("Output task running in core %d\r\n", xPortGetCoreID());
 	while(1)
 	{
 		notificationSuccess = xTaskNotifyWait( 0, ULONG_MAX, &notificationValue,
@@ -320,7 +319,7 @@ void tick_task(void *pvParameter)
 
 void bass_task(void *pvParameter)
 {
-	float taskPeriod = 100/1e6;
+	float taskPeriod = 100e-6;
 	float signalAmplitude = 1;
 	float phase = 0;
 	uint32_t bassDutyCycle = 0;
@@ -336,7 +335,6 @@ void bass_task(void *pvParameter)
     };
     gpio_config(&testGPIO);
     gpio_set_level(GPIO_NUM_21, 0); // Disable
-    printf("Bass task running on core %d\r\n", xPortGetCoreID());
     while(1)
 	{
 		// Suspend this task
@@ -351,7 +349,7 @@ void bass_task(void *pvParameter)
 
 			// Calculate PWM value
 			signalAmplitude = (float)bassIntensity/INTENSITY_HIGH;
-			signalValue = signalAmplitude*sin(phase)/4;
+			signalValue = signalAmplitude*sin(phase);
 			bassDutyCycle = (uint32_t)(BASS_PWM_DUTY_MAX*fabs(signalValue));
 			setBassPWMDuty(bassDutyCycle);
 
@@ -413,7 +411,7 @@ void adc_task(void *pvParameter)
 	{
 	    esp_err_t r = adc2_get_raw( ADC2_CHANNEL_0, ADC_WIDTH_12Bit, &read_raw);
 	    if ( r == ESP_OK ) {
-	        //printf("%d\n", read_raw );
+	        printf("%d\n", read_raw );
 	    } else if ( r == ESP_ERR_TIMEOUT ) {
 	        printf("ADC2 used by Wi-Fi.\n");
 	    }
@@ -439,9 +437,9 @@ void motor_task(void *pvParameter)
     while (true)
     {
     	gpio_set_level(GPIO_NUM_27, 0); // Direction
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
+        vTaskDelay(15000 / portTICK_PERIOD_MS);
         gpio_set_level(GPIO_NUM_27, 1); // Direction
-		vTaskDelay(5000 / portTICK_PERIOD_MS);
+		vTaskDelay(15000 / portTICK_PERIOD_MS);
     } // while(true)
 } //motor_task
 
