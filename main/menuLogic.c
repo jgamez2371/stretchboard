@@ -23,7 +23,7 @@ const char timeRowTemplate[] 		= "Time %02d:%02d";
 const char intensityRowTempalte[]	= "Intensity %d";
 const char infraredRowTemplate[] 	= "Infrared %d";
 const char frequencyRowTemplate[] 	= "Frequency %d";
-const char angleRowTemplate[] 		= "Angle %d";
+const char angleRowTemplate[] 		= "Angle %d%%";
 const char emptyRow[] = " ";
 
 stretchboardMenu_t getCurrentMenu()
@@ -485,7 +485,7 @@ controlEvent_t p4_2ReactToKey(uint8_t keyMask)
 					event = EV_UPDATE_FREQUENCY;
 					break;
 				case 3: // Angle
-					if(--(menuPtr->settings->angle) < SETTINGS_ANGMIN)
+					if((menuPtr->settings->angle -= 10) < SETTINGS_ANGMIN)
 					{
 						menuPtr->settings->angle = SETTINGS_ANGMIN;
 					}
@@ -519,7 +519,7 @@ controlEvent_t p4_2ReactToKey(uint8_t keyMask)
 					event = EV_UPDATE_FREQUENCY;
 					break;
 				case 3: // Angle
-					if(++(menuPtr->settings->angle) > SETTINGS_ANGMAX)
+					if((menuPtr->settings->angle += 10) > SETTINGS_ANGMAX)
 					{
 						menuPtr->settings->angle = SETTINGS_ANGMAX;
 					}

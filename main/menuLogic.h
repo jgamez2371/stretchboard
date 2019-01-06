@@ -56,7 +56,7 @@ typedef struct programMenu_t
 #define SETTINGS_FREQMAX	45
 #define SETTINGS_FREQMIN	12
 #define SETTINGS_FREQDEF	20
-#define SETTINGS_ANGMAX		45
+#define SETTINGS_ANGMAX		100
 #define SETTINGS_ANGMIN		0
 #define SETTINGS_ANGDEF		20
 

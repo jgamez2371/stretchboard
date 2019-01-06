@@ -15,10 +15,10 @@
 #include "menuLogic.h"
 
 
-// SDA - GPIO21
+// SDA
 #define PIN_SDA 13
 
-// SCL - GPIO22
+// SCL
 #define PIN_SCL 14
 
 // RTOS stuff
@@ -37,7 +37,6 @@ void input_task(void *pvParameter);
 void control_task(void *pvParameter);
 void output_task(void *pvParameter);
 void motor_task(void *pvParameter);
-void adc_task(void *pvParameter);
 void tick_task(void *pvParameter);
 void bass_task(void *pvParameter);
 void timerISR(void *para);
@@ -126,10 +125,8 @@ void app_main(void)
     xTaskCreate(&input_task, "input_task",
     		configMINIMAL_STACK_SIZE*5, NULL, 2, &xInputTask);
     xTaskNotify(xControlTask, EV_NONE, eSetValueWithOverwrite);
-//    xTaskCreate(&motor_task, "motor_task",
-//    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xMotorTask);
-//    xTaskCreate(&adc_task, "adc_task",
-//    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xADCTask);
+    xTaskCreate(&motor_task, "motor_task",
+    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xMotorTask);
 } // app_main
 
 void input_task(void *pvParameter)
@@ -324,24 +321,11 @@ void bass_task(void *pvParameter)
 	float phase = 0;
 	uint32_t bassDutyCycle = 0;
 	float signalValue = 0;
-
-    const gpio_config_t testGPIO =
-    {
-		.pin_bit_mask = (1<<GPIO_NUM_21),
-		.mode = GPIO_MODE_OUTPUT,
-		.pull_up_en = GPIO_PULLUP_DISABLE,
-		.pull_down_en = GPIO_PULLDOWN_DISABLE,
-		.intr_type = GPIO_INTR_DISABLE
-    };
-    gpio_config(&testGPIO);
-    gpio_set_level(GPIO_NUM_21, 0); // Disable
     while(1)
 	{
 		// Suspend this task
 		if(ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(100)) != 0)
 		{
-			gpio_set_level(GPIO_NUM_21, 1); // Enable
-
 			// Calculate phase resolution
 			if(signalFrequency < 1) signalFrequency = 1;
 			float signalPeriod = 1/(float)signalFrequency;
@@ -362,7 +346,6 @@ void bass_task(void *pvParameter)
 			{
 				phase -= 2*M_PI;
 			}
-			gpio_set_level(GPIO_NUM_21, 0); // Disable
 		}
 	}
 }
@@ -388,60 +371,89 @@ void initAll()
 	timer_init(TIMER_GROUP_0, TIMER_0, &timerConfig);
 }
 
-void adc_task(void *pvParameter)
+typedef enum motorState_t
 {
-	// SPI config
-	spi_device_handle_t spiDevice;
-	const spi_bus_config_t spiConfig =
-	{
-	    GPIO_NUM_34,                ///< GPIO pin for Master Out Slave In (=spi_d) signal, or -1 if not used.
-	    GPIO_NUM_35,                ///< GPIO pin for Master In Slave Out (=spi_q) signal, or -1 if not used.
-	    GPIO_NUM_32,                ///< GPIO pin for Spi CLocK signal, or -1 if not used.
-	    -1,              ///< GPIO pin for WP (Write Protect) signal which is used as D2 in 4-bit communication modes, or -1 if not used.
-	    -1,              ///< GPIO pin for HD (HolD) signal which is used as D3 in 4-bit communication modes, or -1 if not used.
-	    0,            ///< Maximum transfer size, in bytes. Defaults to 4094 if 0.
-	    0                 ///< Abilities of bus to be checked by the driver. Or-ed value of ``SPICOMMON_BUSFLAG_*`` flags.
-	};
-//	spi_bus_initialize(HSPI_HOST, &spiConfig, 0);
-//	spi_bus_add_device(spi_host_device_t host, const spi_device_interface_config_t *dev_config, spi_device_handle_t *handle)
-	// ADC config
-    int read_raw;
-    adc2_config_channel_atten( ADC2_CHANNEL_0, ADC_ATTEN_0db );
-	while(1)
-	{
-	    esp_err_t r = adc2_get_raw( ADC2_CHANNEL_0, ADC_WIDTH_12Bit, &read_raw);
-	    if ( r == ESP_OK ) {
-	        printf("%d\n", read_raw );
-	    } else if ( r == ESP_ERR_TIMEOUT ) {
-	        printf("ADC2 used by Wi-Fi.\n");
-	    }
-	    vTaskDelay(250);
-	} // while(1)
-} // adc_task
+	ST_MOTOR_ADJUSTING,
+	ST_MOTOR_STABLE
+} motorState_t;
+
+#define MOTOR_ERROR_MARGIN_LOW 2
+#define MOTOR_ERROR_MARGIN_HIGH 10
 
 void motor_task(void *pvParameter)
 {
-    const gpio_config_t bassShakerGPIOConfig =
-    {
-		.pin_bit_mask = (1<<GPIO_NUM_26) | (1<<GPIO_NUM_27),
+	const gpio_config_t motorGPIOConfig =
+	{
+		.pin_bit_mask = (1<<MOTOR_ENABLE_PIN) | (1<<MOTOR_DIRECTION_PIN)
+			| (1<<MOTOR_PWM_PIN),
 		.mode = GPIO_MODE_OUTPUT,
 		.pull_up_en = GPIO_PULLUP_DISABLE,
 		.pull_down_en = GPIO_PULLDOWN_DISABLE,
 		.intr_type = GPIO_INTR_DISABLE
-    };
-    gpio_config(&bassShakerGPIOConfig);
+	};
+	gpio_config(&motorGPIOConfig);
 
-    gpio_set_level(GPIO_NUM_26, 0); // Disable
-    //gpio_set_level(GPIO_NUM_9, 1); // PWM
+	gpio_set_level(MOTOR_ENABLE_PIN, 1); // Enable active low
+	gpio_set_level(MOTOR_PWM_PIN, 1); // PWM
 
-    while (true)
-    {
-    	gpio_set_level(GPIO_NUM_27, 0); // Direction
-        vTaskDelay(15000 / portTICK_PERIOD_MS);
-        gpio_set_level(GPIO_NUM_27, 1); // Direction
-		vTaskDelay(15000 / portTICK_PERIOD_MS);
-    } // while(true)
-} //motor_task
+	motorState_t state = ST_MOTOR_ADJUSTING;
+	// ADC config
+    int read_raw;
+    int target;
+    int angleError;
+    adc2_config_channel_atten( ADC2_CHANNEL_0, ADC_ATTEN_DB_11);
+    printf("Motor task on core %d\r\n", xPortGetCoreID());
+
+	while(1)
+	{
+		target = ((p4Settings.angle)/10)*51;
+
+		angleError = 0;
+	    esp_err_t r = adc2_get_raw( ADC2_CHANNEL_0, ADC_WIDTH_BIT_9, &read_raw);
+	    if ( r == ESP_OK )
+	    {
+	        //printf("%d\n", read_raw );
+	        angleError = target - read_raw;
+	    } else if ( r == ESP_ERR_TIMEOUT )
+	    {
+	        printf("ADC2 used by Wi-Fi.\n");
+	    }
+	    switch(state)
+	    {
+	    	case ST_MOTOR_ADJUSTING:
+	    		if(abs(angleError) > MOTOR_ERROR_MARGIN_LOW)
+	    		{
+	    			// Switch on
+	    			gpio_set_level(MOTOR_ENABLE_PIN, 0); // Enable active low
+	    			// Set direction
+	    			if(angleError > 0)
+	    			{
+	    				gpio_set_level(MOTOR_DIRECTION_PIN, 0); // Increase
+	    			}
+	    			else
+	    			{
+	    				gpio_set_level(MOTOR_DIRECTION_PIN, 1); // Decrease
+	    			}
+	    		}
+	    		else
+	    		{
+	    			// Switch off
+	    			gpio_set_level(MOTOR_ENABLE_PIN, 1); // Enable active low
+	    			state = ST_MOTOR_STABLE;
+	    		}
+	    		break;
+	    	// ST_MOTOR_ADJUSTING
+	    	case ST_MOTOR_STABLE:
+	    		if(abs(angleError) > MOTOR_ERROR_MARGIN_HIGH)
+	    		{
+	    			state = ST_MOTOR_ADJUSTING;
+	    		}
+	    		break;
+	    	// ST_MOTOR_STABLE
+	    } // state
+	    vTaskDelay(33);
+	} // while(1)
+} // motor_task
 
 void startProgram(programSettings_t * settings)
 {
