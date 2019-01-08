@@ -27,6 +27,15 @@ static ledc_channel_config_t ledc_channel =
 	.timer_sel  = LEDC_HS_TIMER
 };
 
+static ledc_channel_config_t motorPWMChannel =
+{
+	.channel    = MOTOR_PWM_CHANNEL,
+	.duty       = 0,
+	.gpio_num   = MOTOR_PWM_PIN,
+	.speed_mode = LEDC_HS_MODE,
+	.timer_sel  = LEDC_HS_TIMER
+};
+
 // Bass PWM configuration variables
 static ledc_timer_config_t bassPWMTimer =
 {
@@ -89,6 +98,28 @@ void setLEDIntesity(programIntensityLevel_t intensity)
 	}
 	setLEDDuty(intensity*(LEDC_DUTY_MAX/INTENSITY_HIGH));
 }
+
+void motorConfig()
+{
+	ledc_channel_config(&motorPWMChannel);
+	const gpio_config_t motorGPIOConfig =
+	{
+		.pin_bit_mask = (1<<MOTOR_ENABLE_PIN) | (1<<MOTOR_DIRECTION_PIN)
+			| (1<<MOTOR_PWM_PIN),
+		.mode = GPIO_MODE_OUTPUT,
+		.pull_up_en = GPIO_PULLUP_DISABLE,
+		.pull_down_en = GPIO_PULLDOWN_DISABLE,
+		.intr_type = GPIO_INTR_DISABLE
+	};
+	gpio_config(&motorGPIOConfig);
+	gpio_set_level(MOTOR_ENABLE_PIN, 1); // Enable active low
+} //motorConfig
+
+void setMotorPWMDuty(uint32_t duty)
+{
+	motorPWMChannel.duty= duty;
+	ledc_channel_config(&motorPWMChannel);
+} // setMotorPWMDuty
 
 void bassConfig()
 {

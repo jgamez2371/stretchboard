@@ -32,6 +32,7 @@
 #define MOTOR_ENABLE_PIN GPIO_NUM_26
 #define MOTOR_DIRECTION_PIN GPIO_NUM_27
 #define MOTOR_PWM_PIN GPIO_NUM_21
+#define MOTOR_PWM_CHANNEL LEDC_CHANNEL_1
 
 #define PCA9536_7_BIT_ADDRESS 0x41
 #define PCA9536_I2C_WRITE_ADDRESS PCA9536_7_BIT_ADDRESS<<1
@@ -53,6 +54,9 @@ void testLED();
 void setLEDDuty(uint32_t duty);
 void switchLEDOff();
 void setLEDIntesity(programIntensityLevel_t intensity);
+
+void motorConfig();
+void setMotorPWMDuty(uint32_t duty);
 
 void bassConfig();
 void setBassPWMDuty(uint32_t duty);

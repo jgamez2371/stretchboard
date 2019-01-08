@@ -47,8 +47,8 @@ void stopProgram(programSettings_t *settings);
 
 // Global variables
 float signalFrequency = 20;
-#define STABLE_TIME 1000//2*60;
-#define STOCHASTIC_TIME 5//30;
+#define STABLE_TIME 2*60
+#define STOCHASTIC_TIME 30
 #define PROGRAM_PERIOD (STABLE_TIME + STOCHASTIC_TIME)
 
 esp_err_t event_handler(void *ctx, system_event_t *event)
@@ -118,6 +118,8 @@ void app_main(void)
         		configMINIMAL_STACK_SIZE*5, NULL, 3, &xTickTask, 1);
     xTaskCreatePinnedToCore(&control_task, "control_task",
         		configMINIMAL_STACK_SIZE*5, NULL, 3, &xControlTask, 1);
+    xTaskCreatePinnedToCore(&motor_task, "motor_task",
+    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xMotorTask, 1);
     // Core 0
     xTaskCreatePinnedToCore(&bass_task, "bass_task",
     		configMINIMAL_STACK_SIZE*5, NULL, 4, &xBassTask, 0);
@@ -125,8 +127,6 @@ void app_main(void)
     xTaskCreate(&input_task, "input_task",
     		configMINIMAL_STACK_SIZE*5, NULL, 2, &xInputTask);
     xTaskNotify(xControlTask, EV_NONE, eSetValueWithOverwrite);
-    xTaskCreate(&motor_task, "motor_task",
-    		configMINIMAL_STACK_SIZE*5, NULL, 2, &xMotorTask);
 } // app_main
 
 void input_task(void *pvParameter)
@@ -236,11 +236,11 @@ void control_task(void *pvParameter)
 					{
 						int16_t sequenceTime = elapsedTime % PROGRAM_PERIOD;
 						// Stochastic vibration
-						if(sequenceTime > STABLE_TIME)
+						if(sequenceTime >= STABLE_TIME)
 						{
 							// Random between 12 and 45 Hz
-							//signalFrequency =  esp_random() % 34 + 12;
-							signalFrequency = 10;
+							signalFrequency =  esp_random() % 34 + 12;
+							//signalFrequency = 10;
 						}
 						else if(sequenceTime == 0)
 						{
@@ -356,6 +356,7 @@ void initAll()
 			&p4Settings);
 	ledConfig();
 	bassConfig();
+	motorConfig();
 	// Timer init
 	timer_config_t timerConfig =
 	{
@@ -378,24 +379,13 @@ typedef enum motorState_t
 } motorState_t;
 
 #define MOTOR_ERROR_MARGIN_LOW 2
-#define MOTOR_ERROR_MARGIN_HIGH 10
+#define MOTOR_ERROR_MARGIN_HIGH 15
+
+#define MOTOR_ERROR_THRESHOLD_1 10
+#define MOTOR_ERROR_THRESHOLD_2 20
 
 void motor_task(void *pvParameter)
 {
-	const gpio_config_t motorGPIOConfig =
-	{
-		.pin_bit_mask = (1<<MOTOR_ENABLE_PIN) | (1<<MOTOR_DIRECTION_PIN)
-			| (1<<MOTOR_PWM_PIN),
-		.mode = GPIO_MODE_OUTPUT,
-		.pull_up_en = GPIO_PULLUP_DISABLE,
-		.pull_down_en = GPIO_PULLDOWN_DISABLE,
-		.intr_type = GPIO_INTR_DISABLE
-	};
-	gpio_config(&motorGPIOConfig);
-
-	gpio_set_level(MOTOR_ENABLE_PIN, 1); // Enable active low
-	gpio_set_level(MOTOR_PWM_PIN, 1); // PWM
-
 	motorState_t state = ST_MOTOR_ADJUSTING;
 	// ADC config
     int read_raw;
@@ -425,6 +415,20 @@ void motor_task(void *pvParameter)
 	    		{
 	    			// Switch on
 	    			gpio_set_level(MOTOR_ENABLE_PIN, 0); // Enable active low
+	    			// TODO: set PWM duty cycle
+	    			//gpio_set_level(MOTOR_PWM_PIN, 1); // PWM
+	    			if(abs(angleError) < MOTOR_ERROR_THRESHOLD_1)
+	    			{
+	    				setMotorPWMDuty(LEDC_DUTY_MAX/16);
+	    			}
+	    			else if(abs(angleError) < MOTOR_ERROR_THRESHOLD_2)
+	    			{
+	    				setMotorPWMDuty(LEDC_DUTY_MAX/4);
+	    			}
+	    			else
+	    			{
+	    				setMotorPWMDuty(LEDC_DUTY_MAX);
+	    			}
 	    			// Set direction
 	    			if(angleError > 0)
 	    			{
@@ -439,6 +443,8 @@ void motor_task(void *pvParameter)
 	    		{
 	    			// Switch off
 	    			gpio_set_level(MOTOR_ENABLE_PIN, 1); // Enable active low
+	    			setMotorPWMDuty(LEDC_DUTY_MAX);
+	    			//gpio_set_level(MOTOR_PWM_PIN, 0); // PWM
 	    			state = ST_MOTOR_STABLE;
 	    		}
 	    		break;
