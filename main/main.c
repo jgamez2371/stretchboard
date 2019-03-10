@@ -332,7 +332,7 @@ void bass_task(void *pvParameter)
 			float phaseResolution = 2*M_PI/(signalPeriod/((float)taskPeriod));
 
 			// Calculate PWM value
-			signalAmplitude = (float)bassIntensity/INTENSITY_HIGH;
+			signalAmplitude = (float)bassIntensity/(BASS_INTENSITY_MAX/2);
 			signalValue = signalAmplitude*sin(phase);
 			bassDutyCycle = (uint32_t)(BASS_PWM_DUTY_MAX*fabs(signalValue));
 			setBassPWMDuty(bassDutyCycle);
@@ -463,8 +463,8 @@ void motor_task(void *pvParameter)
 
 void startProgram(programSettings_t * settings)
 {
-	setLEDIntesity((programIntensityLevel_t)settings->infrared);
-	setBassIntesity((programIntensityLevel_t)settings->intensity);
+	setLEDIntesity((uint8_t)settings->infrared);
+	setBassIntesity((uint8_t)settings->intensity);
 	signalFrequency = getNextFreq(settings);
 }
 

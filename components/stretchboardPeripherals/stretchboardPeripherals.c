@@ -90,13 +90,13 @@ void switchLEDOff()
 	ledc_stop(LEDC_HS_MODE, LEDC_HS_CH0_CHANNEL, 0);
 }
 
-void setLEDIntesity(programIntensityLevel_t intensity)
+void setLEDIntesity(uint8_t intensity)
 {
-	if(intensity >= INTENSITY_MAX)
+	if(intensity >= LED_INTENSITY_MAX)
 	{
-		intensity = INTENSITY_HIGH;
+		intensity = LED_INTENSITY_MAX;
 	}
-	setLEDDuty(intensity*(LEDC_DUTY_MAX/INTENSITY_HIGH));
+	setLEDDuty(intensity*(LEDC_DUTY_MAX/LED_INTENSITY_MAX));
 }
 
 void motorConfig()
@@ -138,12 +138,12 @@ void bassConfig()
     gpio_set_level(BASS_DIRECTION_PIN, 1);
 }
 
-void setBassIntesity(programIntensityLevel_t intensity)
+void setBassIntesity(uint8_t intensity)
 {
 	gpio_set_level(BASS_DISABLE_PIN, 0);
-	if(intensity >= INTENSITY_MAX)
+	if(intensity >= BASS_INTENSITY_MAX)
 	{
-		intensity = INTENSITY_HIGH;
+		intensity = BASS_INTENSITY_MAX;
 	}
 	bassIntensity = intensity;
 	//setBassPWMDuty(intensity*(BASS_PWM_DUTY_MAX/INTENSITY_HIGH));

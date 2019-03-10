@@ -317,17 +317,17 @@ controlEvent_t programMenuReactToKey(stretchboardMenu_t menu, uint8_t keyMask)
 						menuPtr->settings->time = programTime;
 					}
 					break;
-				case 2: // Intensity
-					if(++menuPtr->settings->intensity > INTENSITY_HIGH)
+				case 2: // Bass ntensity
+					if(++menuPtr->settings->intensity > BASS_INTENSITY_MAX)
 					{
-						menuPtr->settings->intensity = INTENSITY_HIGH;
+						menuPtr->settings->intensity = BASS_INTENSITY_MAX;
 					}
 					event = EV_UPDATE_INTENSITY;
 					break;
-				case 3: // Infrared
-					if(++menuPtr->settings->infrared > INTENSITY_HIGH)
+				case 3: // Infrared intensity
+					if(++menuPtr->settings->infrared > LED_INTENSITY_MAX)
 					{
-						menuPtr->settings->infrared = INTENSITY_HIGH;
+						menuPtr->settings->infrared = LED_INTENSITY_MAX;
 					}
 					event = EV_UPDATE_LED;
 					break;
@@ -497,17 +497,17 @@ controlEvent_t p4_2ReactToKey(uint8_t keyMask)
 			case KEY_RIGHT:
 				switch(currentRow)
 				{
-				case 0: // Intensity
-					if(++menuPtr->settings->intensity > INTENSITY_HIGH)
+				case 0: // Bass Intensity
+					if(++menuPtr->settings->intensity > BASS_INTENSITY_MAX)
 					{
-						menuPtr->settings->intensity = INTENSITY_HIGH;
+						menuPtr->settings->intensity = BASS_INTENSITY_MAX;
 					}
 					event = EV_UPDATE_INTENSITY;
 					break;
-				case 1: // Infrared
-					if(++menuPtr->settings->infrared > INTENSITY_HIGH)
+				case 1: // Infrared intensity
+					if(++menuPtr->settings->infrared > LED_INTENSITY_MAX)
 					{
-						menuPtr->settings->infrared = INTENSITY_HIGH;
+						menuPtr->settings->infrared = LED_INTENSITY_MAX;
 					}
 					event = EV_UPDATE_LED;
 					break;
