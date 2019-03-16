@@ -332,7 +332,7 @@ void bass_task(void *pvParameter)
 			float phaseResolution = 2*M_PI/(signalPeriod/((float)taskPeriod));
 
 			// Calculate PWM value
-			signalAmplitude = (float)bassIntensity/(BASS_INTENSITY_MAX/2);
+			signalAmplitude = (float)bassIntensity/(BASS_INTENSITY_MAX/10);
 			signalValue = signalAmplitude*sin(phase);
 			bassDutyCycle = (uint32_t)(BASS_PWM_DUTY_MAX*fabs(signalValue));
 			setBassPWMDuty(bassDutyCycle);

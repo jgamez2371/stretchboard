@@ -146,7 +146,6 @@ void setBassIntesity(uint8_t intensity)
 		intensity = BASS_INTENSITY_MAX;
 	}
 	bassIntensity = intensity;
-	//setBassPWMDuty(intensity*(BASS_PWM_DUTY_MAX/INTENSITY_HIGH));
 }
 
 void setBassPWMDuty(uint32_t duty)
