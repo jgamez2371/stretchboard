@@ -321,6 +321,11 @@ void bass_task(void *pvParameter)
 	float phase = 0;
 	uint32_t bassDutyCycle = 0;
 	float signalValue = 0;
+	float waveFrequency = 50;
+	float waveDuration = (1/waveFrequency) / taskPeriod;
+	float waveResolution = 2*M_PI/waveDuration;
+	float wavePhase = 0;
+	int counter = 0;
     while(1)
 	{
 		// Suspend this task
@@ -329,23 +334,29 @@ void bass_task(void *pvParameter)
 			// Calculate phase resolution
 			if(signalFrequency < 1) signalFrequency = 1;
 			float signalPeriod = 1/(float)signalFrequency;
-			float phaseResolution = 2*M_PI/(signalPeriod/((float)taskPeriod));
 
-			// Calculate PWM value
 			signalAmplitude = (float)bassIntensity/(BASS_INTENSITY_MAX/10);
-			signalValue = signalAmplitude*sin(phase);
+
+			int signalDuration = (int)(signalPeriod/taskPeriod);
+			// Calculate PWM
+			if((counter < waveDuration/2) ||
+				((counter > signalDuration/2) &&
+				 (counter < signalDuration/2 + waveDuration/2)))
+			{
+				signalValue = signalAmplitude*cos(wavePhase += waveResolution);
+			}
+			// Increase or reset counter
+			if(++counter > signalDuration)
+			{
+				counter = 0;
+				wavePhase = 0;
+			}
 			bassDutyCycle = (uint32_t)(BASS_PWM_DUTY_MAX*fabs(signalValue));
 			setBassPWMDuty(bassDutyCycle);
 
 			// Set direction according to the sign
 			if(signalValue > 0) gpio_set_level(BASS_DIRECTION_PIN, 1);
 			else				gpio_set_level(BASS_DIRECTION_PIN, 0);
-
-			// Calculate phase for next cycle
-			if((phase += phaseResolution) > 2*M_PI)
-			{
-				phase -= 2*M_PI;
-			}
 		}
 	}
 }

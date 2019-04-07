@@ -46,8 +46,9 @@
 //	INTENSITY_HIGH,
 //	INTENSITY_MAX
 //} programIntensityLevel_t;
-#define INTENSITY_LOW 1
+#define BASS_INTENSITY_LOW 1
 #define BASS_INTENSITY_MAX 100
+#define LED_INTENSITY_LOW 0
 #define LED_INTENSITY_MAX 3
 
 extern int8_t bassIntensity;
