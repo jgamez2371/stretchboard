@@ -38,6 +38,8 @@ typedef struct programSettings_t
 	int8_t angle;
 	int8_t freqArray[10];
 	int8_t currentFreqIndex;
+	int8_t offset;
+	float slope;
 } programSettings_t;
 
 typedef struct programMenu_t

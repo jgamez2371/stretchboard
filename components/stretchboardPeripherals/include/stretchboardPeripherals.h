@@ -47,11 +47,13 @@
 //	INTENSITY_MAX
 //} programIntensityLevel_t;
 #define BASS_INTENSITY_LOW 1
-#define BASS_INTENSITY_MAX 100
+#define BASS_INTENSITY_MAX 10
 #define LED_INTENSITY_LOW 0
 #define LED_INTENSITY_MAX 3
 
 extern int8_t bassIntensity;
+extern int8_t intensityOffset;
+extern float intensitySlope;
 
 void ledConfig();
 void testLED();
@@ -64,7 +66,7 @@ void setMotorPWMDuty(uint32_t duty);
 
 void bassConfig();
 void setBassPWMDuty(uint32_t duty);
-void setBassIntesity(uint8_t intensity);
+void setBassIntesity(uint8_t intensity, int8_t offset, float slope);
 void switchBassOff();
 uint8_t readPCA9536();
 

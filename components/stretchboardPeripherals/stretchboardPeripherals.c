@@ -8,6 +8,8 @@
 #include "stretchboardPeripherals.h"
 
 int8_t bassIntensity;
+int8_t intensityOffset;
+float intensitySlope;
 
 // LED PWM configuration variables
 static ledc_timer_config_t ledc_timer =
@@ -138,7 +140,7 @@ void bassConfig()
     gpio_set_level(BASS_DIRECTION_PIN, 1);
 }
 
-void setBassIntesity(uint8_t intensity)
+void setBassIntesity(uint8_t intensity, int8_t offset, float slope)
 {
 	gpio_set_level(BASS_DISABLE_PIN, 0);
 	if(intensity >= BASS_INTENSITY_MAX)
@@ -146,6 +148,8 @@ void setBassIntesity(uint8_t intensity)
 		intensity = BASS_INTENSITY_MAX;
 	}
 	bassIntensity = intensity;
+	intensityOffset = offset;
+	intensitySlope = slope;
 }
 
 void setBassPWMDuty(uint32_t duty)

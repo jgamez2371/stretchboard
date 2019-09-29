@@ -65,7 +65,9 @@ programSettings_t p1Settings =
 	.frequency = SETTINGS_FREQDEF,
 	.angle = SETTINGS_ANGDEF,
 	.freqArray = {16, 18, 16, 14, 12, 14, 0},
-	.currentFreqIndex = 0
+	.currentFreqIndex = 0,
+	.offset = 3,
+	.slope = 0.7
 };
 programSettings_t p2Settings =
 {
@@ -76,7 +78,9 @@ programSettings_t p2Settings =
 	.frequency = SETTINGS_FREQDEF,
 	.angle = SETTINGS_ANGDEF,
 	.freqArray = {22, 20, 22, 24, 26, 24, 0},
-	.currentFreqIndex = 0
+	.currentFreqIndex = 0,
+	.offset = 2,
+	.slope = 0.8
 };
 programSettings_t p3Settings =
 {
@@ -87,7 +91,9 @@ programSettings_t p3Settings =
 	.frequency = SETTINGS_FREQDEF,
 	.angle = SETTINGS_ANGDEF,
 	.freqArray = {40, 45, 40, 35, 0},
-	.currentFreqIndex = 0
+	.currentFreqIndex = 0,
+	.offset = 2,
+	.slope = 0.6
 };
 
 programSettings_t p4Settings =
@@ -98,7 +104,9 @@ programSettings_t p4Settings =
 	.frequency = SETTINGS_FREQDEF,
 	.angle = SETTINGS_ANGDEF,
 	.freqArray = {0, 0},
-	.currentFreqIndex = 0
+	.currentFreqIndex = 0,
+	.offset = 0,
+	.slope = 1
 };
 
 void app_main(void)
@@ -253,7 +261,7 @@ void control_task(void *pvParameter)
 					setLEDIntesity(currentProgSettings->infrared);
 					break;
 				case EV_UPDATE_INTENSITY:
-					setBassIntesity(currentProgSettings->intensity);
+					setBassIntesity(currentProgSettings->intensity, currentProgSettings->offset, currentProgSettings->slope);
 					break;
 				case EV_UPDATE_FREQUENCY:
 					signalFrequency =  getNextFreq(currentProgSettings);
@@ -318,7 +326,6 @@ void bass_task(void *pvParameter)
 {
 	float taskPeriod = 100e-6;
 	float signalAmplitude = 1;
-	float phase = 0;
 	uint32_t bassDutyCycle = 0;
 	float signalValue = 0;
 	float waveFrequency = 50;
@@ -335,7 +342,7 @@ void bass_task(void *pvParameter)
 			if(signalFrequency < 1) signalFrequency = 1;
 			float signalPeriod = 1/(float)signalFrequency;
 
-			signalAmplitude = (float)bassIntensity/(BASS_INTENSITY_MAX/10);
+			signalAmplitude = (bassIntensity*intensitySlope + intensityOffset)/(BASS_INTENSITY_MAX);
 
 			int signalDuration = (int)(signalPeriod/taskPeriod);
 			// Calculate PWM
@@ -475,7 +482,7 @@ void motor_task(void *pvParameter)
 void startProgram(programSettings_t * settings)
 {
 	setLEDIntesity((uint8_t)settings->infrared);
-	setBassIntesity((uint8_t)settings->intensity);
+	setBassIntesity((uint8_t)settings->intensity, settings->offset, settings->slope);
 	signalFrequency = getNextFreq(settings);
 }
 
